@@ -1,0 +1,10 @@
+name = "menumat-chatgptapps"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_URL = "https://menumaestro.lovable.app"
+
+# Secrets (set via: wrangler secret put SECRET_NAME)
+# MCP_AUTH_TOKEN — bearer token for authenticating MCP clients
