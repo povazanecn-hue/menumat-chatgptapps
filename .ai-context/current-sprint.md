@@ -9,10 +9,12 @@
 - [x] Health check endpoint `/health`
 
 ### Ďalší krok
-→ `npm install` a `wrangler dev` — otestovať lokálne
-→ `wrangler deploy` — nasadiť na Cloudflare Workers
-→ Pripojiť do ChatGPT cez Settings → Connectors
-→ Nastaviť `wrangler secret put MCP_AUTH_TOKEN`
+→ Pripojiť do ChatGPT: Settings → Connectors → Add MCP → URL nižšie
+→ Otestovať tools v ChatGPT konverzácii
+→ Nastaviť `wrangler secret put MCP_AUTH_TOKEN` (voliteľné, pre auth)
+
+### Live URL
+https://menumat-chatgptapps.povazanecn.workers.dev/mcp
 
 ### Dôležité kontexty
 - Frontend hook žije v `menumat-ecb44ba0/src/hooks/useMCPBridge.ts`
