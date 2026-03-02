@@ -148,6 +148,58 @@ function createServer(env: Env): McpServer {
     })
   );
 
+  // --- Firecrawl Browser cURL helper ---------------------------------------
+  server.tool(
+    "firecrawl_browser_curl_guide",
+    "Pomocník pre Firecrawl Browser cez cURL — vyber cieľ (integrácia, úprava, nový projekt) a získaj akčný plán",
+    {
+      objective: z
+        .enum(["integrate_existing", "modify_for_use_case", "build_new"])
+        .describe("Čo chceš spraviť s Firecrawl Browser snippetom"),
+      useCase: z
+        .string()
+        .optional()
+        .describe("Konkrétny use-case (napr. scraping cenníka konkurencie, QA test flow, monitoring)"),
+      language: z
+        .enum(["python", "node", "bash"])
+        .optional()
+        .describe("Preferovaný runtime pre execute endpoint"),
+    },
+    async ({ objective, useCase, language }) => {
+      const runtime = language ?? "python";
+
+      const objectiveText: Record<typeof objective, string> = {
+        integrate_existing:
+          "Integrácia do existujúceho projektu: pridáme env konfiguráciu, reusable script a bezpečné volanie API.",
+        modify_for_use_case:
+          "Úprava pre špecifický use-case: navrhneme tok pre tvoje dáta, limity a robustné spracovanie session lifecycle.",
+        build_new:
+          "Nový mini-projekt: pripravíme čistý skeleton so session manažmentom, loggingom a rozšíriteľným workflow.",
+      };
+
+      const contextLine = useCase
+        ? `Tvoj use-case: ${useCase}.`
+        : "Doplň svoj use-case, aby som pripravil presný implementation plan.";
+
+      const message = [
+        "Čo presne chceš urobiť s Firecrawl Browser snippetom?",
+        objectiveText[objective],
+        contextLine,
+        `Predvolený runtime pre execute: ${runtime}.`,
+        "",
+        "Bezpečný cURL základ:",
+        "1) export FIRECRAWL_API_KEY='fc-...'",
+        "2) SESSION=$(curl -s -X POST 'https://api.firecrawl.dev/v2/browser' -H \"Authorization: Bearer $FIRECRAWL_API_KEY\" -H 'Content-Type: application/json' | jq -r '.data.id')",
+        `3) curl -X POST \"https://api.firecrawl.dev/v2/browser/$SESSION/execute\" -H \"Authorization: Bearer $FIRECRAWL_API_KEY\" -H 'Content-Type: application/json' -d '{\"code\":\"await page.goto(\\\"https://news.ycombinator.com\\\")\",\"language\":\"${runtime}\"}'`,
+        "4) curl -X DELETE \"https://api.firecrawl.dev/v2/browser/$SESSION\" -H \"Authorization: Bearer $FIRECRAWL_API_KEY\"",
+      ].join("\n");
+
+      return {
+        content: [{ type: "text" as const, text: message }],
+      };
+    }
+  );
+
   return server;
 }
 
@@ -163,7 +215,7 @@ export class MenumatMCP extends McpAgent<Env, unknown, Record<string, never>> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // Optional bearer-token auth
     if (env.MCP_AUTH_TOKEN) {
       const auth = request.headers.get("Authorization") ?? "";
@@ -181,6 +233,6 @@ export default {
       });
     }
 
-    return MenumatMCP.mount("/mcp").fetch(request, env);
+    return MenumatMCP.mount("/mcp").fetch(request, env, ctx);
   },
 };
