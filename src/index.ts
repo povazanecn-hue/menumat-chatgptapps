@@ -148,6 +148,43 @@ function createServer(env: Env): McpServer {
     })
   );
 
+  // --- Firecrawl Browser Agent helper --------------------------------------
+  server.tool(
+    "firecrawl_browser_integration",
+    "Pomôže pripraviť integráciu Firecrawl Browser + OpenAI Agent podľa tvojho use-case",
+    {
+      projectType: z
+        .enum(["existing_project", "new_project", "prototype"])
+        .default("existing_project")
+        .describe("Či chceš integráciu do existujúceho projektu alebo staviaš niečo nové"),
+      primaryGoal: z
+        .string()
+        .optional()
+        .describe("Čo presne chceš automatizovať (scraping, testovanie UI, monitoring, ... )"),
+    },
+    {},
+    async ({ projectType, primaryGoal }) => ({
+      content: [
+        {
+          type: "text" as const,
+          text: [
+            "Super — najprv si ujasnime presný cieľ, aby som navrhol správnu integráciu Firecrawl Browser agenta.",
+            `Typ projektu: ${projectType}`,
+            primaryGoal ? `Primárny cieľ: ${primaryGoal}` : "Primárny cieľ: nešpecifikovaný",
+            "",
+            "Prosím odpovedz na tieto 4 body:",
+            "1) Chceš to napojiť do existujúceho repozitára alebo vytvoriť samostatnú službu?",
+            "2) Aký je konkrétny workflow (napr. login, navigácia, extrakcia dát, screenshoty, export)?",
+            "3) Kde to bude bežať (Node server, Cloudflare Worker, CI pipeline)?",
+            "4) Aký výstup potrebuješ (JSON, databáza, webhook, report)?",
+            "",
+            "Keď pošleš odpovede, pripravím presný implementačný plán + hotový kód na mieru.",
+          ].join("\n"),
+        },
+      ],
+    })
+  );
+
   return server;
 }
 
