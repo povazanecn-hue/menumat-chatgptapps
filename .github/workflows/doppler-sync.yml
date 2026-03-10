@@ -1,0 +1,36 @@
+name: Sync Doppler → GitHub Secrets
+
+on:
+  workflow_dispatch:    # Manual trigger from GitHub UI
+  schedule:
+    - cron: '0 5 * * *' # Every day at 05:00 UTC (auto-refresh tokens daily)
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/doppler-sync.yml'
+
+jobs:
+  sync-secrets:
+    name: Doppler → GitHub Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync MENUMAT ChatGPT Apps secrets from Doppler
+        uses: dopplerhq/secrets-fetch-action@v1
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+          # All secrets become GitHub Secrets automatically.
+          # Synced: CLOUDFLARE_API_TOKEN, WEBFLOW_API_TOKEN, GITHUB_PAT, etc.
+
+      - name: Verify critical secrets present
+        run: |
+          MISSING=""
+          for var in CLOUDFLARE_API_TOKEN WEBFLOW_API_TOKEN; do
+            if [ -z "${!var}" ]; then
+              MISSING="$MISSING $var"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "WARN: Missing secrets:$MISSING — check Doppler project 'menumat'"
+          else
+            echo "OK: All critical secrets synced from Doppler."
+          fi
